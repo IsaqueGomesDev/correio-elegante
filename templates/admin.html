@@ -98,7 +98,8 @@ tr.finalizada .dest-nome::after{content:' ✓';font-size:.75rem;}
 .btn-final{background:var(--green-light);color:var(--green-dark);border:1.5px solid #a8dfc4;}
 .btn-final:hover{background:var(--green);color:white;border-color:var(--green);}
 .btn-final.done{background:#f0f0f0;color:#aaa;border-color:#ddd;cursor:default;transform:none;filter:none;}
-.btn-comp{background:var(--blue-light);color:var(--blue);border:1.5px solid #bdd5fb;}
+.btn-del{background:#fdecea;color:#c0392b;border:1.5px solid #f5c6cb;}
+.btn-del:hover{background:#c0392b;color:white;border-color:#c0392b;}
 .btn-comp:hover{background:var(--blue);color:white;border-color:var(--blue);}
 .btn-comp.sem{background:#f5f5f5;color:#bbb;border-color:#e0e0e0;cursor:default;transform:none;filter:none;}
 
@@ -107,7 +108,7 @@ tr.finalizada .dest-nome::after{content:' ✓';font-size:.75rem;}
 .countdown.urgente{color:#c0392b;font-weight:700;}
 
 /* Aviso exclusao */
-.del-timer{font-size:.68rem;color:var(--amber);margin-top:.1rem;}
+
 
 .empty-state{text-align:center;padding:4rem 2rem;color:var(--text-muted);}
 .empty-state .ei{font-size:3rem;display:block;margin-bottom:.75rem;opacity:.4;}
@@ -191,7 +192,7 @@ tr.finalizada .dest-nome::after{content:' ✓';font-size:.75rem;}
     <div class="stat green">
       <div class="stat-label">Finalizados</div>
       <div class="stat-val" id="s-final">—</div>
-      <div class="stat-sub">entregues · excluídos em 24h</div>
+      <div class="stat-sub">entregues</div>
       <div class="stat-icon">🎯</div>
     </div>
     <div class="stat blue">
@@ -315,19 +316,7 @@ function renderTabela(lista) {
       statusBadge = `<span class="badge badge-aguard">⏳ Aguardando</span>`;
     }
 
-    // Countdown para exclusão
-    let countdown = '';
-    if (p.finalizado && p.data_finalizado) {
-      const dtFinal = new Date(p.data_finalizado);
-      const dtExclui = new Date(dtFinal.getTime() + 24*3600*1000);
-      const diff = dtExclui - new Date();
-      if (diff > 0) {
-        const h = Math.floor(diff/3600000);
-        const m = Math.floor((diff%3600000)/60000);
-        const cls = h < 2 ? 'urgente' : '';
-        countdown = `<div class="del-timer countdown ${cls}">🗑 excluído em ${h}h${m}m</div>`;
-      }
-    }
+    // Countdown removido — pedidos finalizados ficam salvos permanentemente
 
     // Comprovante
     const compBtn = p.tem_comprovante
@@ -369,6 +358,7 @@ function renderTabela(lista) {
         <div class="acoes">
           ${finBtn}
           ${compBtn}
+          <button class="btn btn-sm btn-del" onclick="excluir(${p.id}, this)" title="Excluir pedido permanentemente">🗑</button>
         </div>
       </td>
     </tr>`;
@@ -380,8 +370,26 @@ function renderTabela(lista) {
     'R$ ' + total.toFixed(2).replace('.', ',');
 }
 
+async function excluir(pid, btn) {
+  if (!confirm('Excluir este pedido permanentemente?\nO valor será removido da arrecadação e não poderá ser recuperado.')) return;
+  btn.disabled = true;
+  btn.textContent = '...';
+  const r = await fetch(`/admin/excluir/${pid}`, { method: 'POST' });
+  const d = await r.json();
+  if (d.sucesso) {
+    // Remove a linha da tabela imediatamente
+    const row = document.getElementById(`row-${pid}`);
+    if (row) { row.style.transition='opacity .3s'; row.style.opacity='0'; setTimeout(()=>row.remove(),300); }
+    toast('🗑 Pedido excluído.', '');
+    setTimeout(carregar, 500);
+  } else {
+    btn.disabled = false; btn.textContent = '🗑';
+    toast('Erro ao excluir.', 'erro');
+  }
+}
+
 async function finalizar(pid, btn) {
-  if (!confirm('Marcar este pedido como entregue/finalizado?\nEle será excluído automaticamente em 24 horas.')) return;
+  if (!confirm('Marcar este pedido como entregue/finalizado?')) return;
 
   btn.disabled = true;
   btn.textContent = '...';
@@ -400,7 +408,7 @@ async function finalizar(pid, btn) {
     btn.textContent = '✓ Feito';
     btn.classList.add('done');
     btn.disabled = true;
-    toast('✅ Pedido finalizado! Será excluído em 24h.', 'verde');
+    toast('✅ Pedido finalizado!', 'verde');
     setTimeout(carregar, 800);
   } else {
     btn.disabled = false;

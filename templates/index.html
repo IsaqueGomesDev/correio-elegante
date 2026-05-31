@@ -173,14 +173,11 @@ footer span{color:var(--rose);}
       <div class="step inactive" id="st3">✓</div>
     </div>
 
-    <!-- Passo 1: QR Code -->
+    <!-- Passo 1: Pix -->
     <div id="passo1">
       <h2>💸 Pague com Pix</h2>
-      <p class="sub">Escaneie o QR Code ou copie a chave</p>
+      <p class="sub">Copie a chave abaixo e pague no seu banco</p>
       <div class="pix-valor" id="pix-valor-text">R$ 0,00</div>
-      <div class="qr-wrap">
-        <img id="qr-img" src="" alt="QR Code Pix">
-      </div>
       <div class="pix-chave-box">
         <div>
           <div class="pix-chave-label">Chave Pix</div>
@@ -384,11 +381,6 @@ async function abrirPix(){
   const preco=d.preco.toFixed(2).replace('.',',');
   document.getElementById('pix-valor-text').textContent='R$ '+preco;
   document.getElementById('pix-chave-display').textContent=PIX_CHAVE;
-
-  // QR Code via API pública (goqr.me)
-  const pixPayload=`PIX: ${PIX_CHAVE} | Valor: R$ ${preco} | ${PIX_NOME}`;
-  document.getElementById('qr-img').src=
-    `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(PIX_CHAVE)}`;
 
   mostrarPasso(1);
   document.getElementById('modal-pix').classList.add('open');

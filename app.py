@@ -1,6 +1,6 @@
 from flask import (Flask, render_template, request, jsonify,
                    Response, redirect, url_for, session, send_from_directory)
-from datetime import datetime, timedelta
+from datetime import datetime
 import json, os, csv, io, sqlite3, base64, secrets
 
 app = Flask(__name__)
@@ -65,16 +65,6 @@ def pedido_to_dict(row):
     d["finalizado"] = bool(d.get("finalizado", 0))
     d.pop("comprovante", None)   # nunca expor base64 nas listagens públicas
     return d
-
-def limpar_finalizados():
-    """Exclui pedidos finalizados há mais de 24 horas."""
-    limite = (datetime.now() - timedelta(hours=24)).strftime("%Y-%m-%d %H:%M:%S")
-    with get_db() as conn:
-        conn.execute(
-            "DELETE FROM pedidos WHERE finalizado=1 AND data_finalizado <= ?",
-            (limite,)
-        )
-        conn.commit()
 
 def is_admin():
     return session.get("admin") is True
@@ -197,14 +187,12 @@ def logout():
 def admin_dashboard():
     redir = require_admin()
     if redir: return redir
-    limpar_finalizados()
     return render_template("admin.html")
 
 @app.route("/admin/dados")
 def admin_dados():
     if not is_admin():
         return jsonify({"erro":"Não autorizado"}), 401
-    limpar_finalizados()
     with get_db() as conn:
         pedidos = [dict(r) for r in
                    conn.execute("SELECT * FROM pedidos ORDER BY id DESC").fetchall()]
@@ -244,6 +232,15 @@ def baixar_comprovante(pid):
     return Response(raw, mimetype=mime,
                     headers={"Content-Disposition":
                              f"attachment; filename=comprovante_{pid}.{ext}"})
+
+@app.route("/admin/excluir/<int:pid>", methods=["POST"])
+def excluir_pedido(pid):
+    if not is_admin():
+        return jsonify({"erro":"Não autorizado"}), 401
+    with get_db() as conn:
+        conn.execute("DELETE FROM pedidos WHERE id=?", (pid,))
+        conn.commit()
+    return jsonify({"sucesso":True})
 
 @app.route("/admin/finalizar/<int:pid>", methods=["POST"])
 def finalizar_pedido(pid):
