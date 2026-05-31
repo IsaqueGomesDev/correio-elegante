@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login Admin — Correio Elegante</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+:root{--rose:#c0394a;--rose-light:#f7d6da;--rose-dark:#8b1a28;--blush:#f9eef0;--cream:#fff8f9;--text:#3a1f25;--text-muted:#8a6068;--white:#fff;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Lato',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+
+.hearts-bg{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden;}
+.heart-f{position:absolute;opacity:0.06;animation:floatUp linear infinite;}
+@keyframes floatUp{0%{transform:translateY(100vh) rotate(0deg);}100%{transform:translateY(-10vh) rotate(360deg);opacity:0;}}
+
+.page{flex:1;display:flex;align-items:center;justify-content:center;padding:2rem;position:relative;z-index:1;}
+
+.card{background:var(--white);border:1px solid var(--rose-light);border-radius:24px;padding:2.5rem 2.25rem;width:100%;max-width:400px;box-shadow:0 12px 48px rgba(192,57,74,.1);}
+
+.logo{text-align:center;margin-bottom:2rem;}
+.logo-icon{font-size:2.8rem;display:block;margin-bottom:.5rem;}
+.logo h1{font-family:'Playfair Display',serif;font-size:1.6rem;color:var(--rose-dark);}
+.logo p{font-size:.82rem;color:var(--text-muted);margin-top:.3rem;}
+
+.aviso{background:#fff8e1;border:1px solid #f0c040;border-left:4px solid #f0a500;border-radius:10px;padding:.85rem 1rem;margin-bottom:1.5rem;font-size:.83rem;color:#7a5800;line-height:1.5;}
+.aviso strong{display:block;margin-bottom:.2rem;font-size:.85rem;}
+
+.form-group{margin-bottom:1.1rem;}
+label{font-size:.75rem;font-weight:700;color:var(--text-muted);letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:.4rem;}
+.input-wrap{position:relative;}
+input[type=text],input[type=password]{width:100%;padding:.75rem 1rem .75rem 2.8rem;border:1.5px solid var(--rose-light);border-radius:10px;font-family:'Lato',sans-serif;font-size:.95rem;color:var(--text);background:var(--cream);outline:none;transition:border-color .2s,box-shadow .2s;}
+input:focus{border-color:var(--rose);box-shadow:0 0 0 3px rgba(192,57,74,.08);background:var(--white);}
+.input-icon{position:absolute;left:.9rem;top:50%;transform:translateY(-50%);font-size:1rem;pointer-events:none;}
+.toggle-pass{position:absolute;right:.9rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:.95rem;color:var(--text-muted);}
+
+.erro-msg{background:#fdecea;border:1px solid #f5c6cb;border-radius:8px;padding:.7rem 1rem;font-size:.83rem;color:#b71c1c;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem;}
+
+.btn-login{width:100%;padding:.9rem;background:var(--rose);color:white;border:none;border-radius:12px;font-family:'Playfair Display',serif;font-size:1.05rem;font-style:italic;cursor:pointer;transition:background .2s,transform .15s,box-shadow .2s;box-shadow:0 4px 16px rgba(192,57,74,.25);margin-top:.5rem;}
+.btn-login:hover{background:var(--rose-dark);transform:translateY(-2px);}
+
+.back-link{display:block;text-align:center;margin-top:1.2rem;font-size:.82rem;color:var(--text-muted);text-decoration:none;}
+.back-link:hover{color:var(--rose);}
+
+footer{text-align:center;padding:1.2rem;font-size:.75rem;color:var(--text-muted);position:relative;z-index:1;}
+footer span{color:var(--rose);}
+</style>
+</head>
+<body>
+<div class="hearts-bg" id="hearts"></div>
+
+<div class="page">
+  <div class="card">
+    <div class="logo">
+      <span class="logo-icon">🔐</span>
+      <h1>Área Administrativa</h1>
+      <p>Correio Elegante · Terceirão 2026</p>
+    </div>
+
+    <div class="aviso">
+      <strong>⚠️ Acesso restrito</strong>
+      Esta página é exclusiva para administradores. Se você é aluno, volte para o site principal para enviar seu correio.
+    </div>
+
+    {% if erro %}
+    <div class="erro-msg">🚫 {{ erro }}</div>
+    {% endif %}
+
+    <form method="POST">
+      <div class="form-group">
+        <label>Usuário</label>
+        <div class="input-wrap">
+          <span class="input-icon">👤</span>
+          <input type="text" name="usuario" placeholder="Digite seu usuário" autocomplete="username" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Senha</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔑</span>
+          <input type="password" name="senha" id="senha-input" placeholder="Digite sua senha" autocomplete="current-password" required>
+          <button type="button" class="toggle-pass" onclick="toggleSenha()" id="toggle-btn">👁</button>
+        </div>
+      </div>
+      <button type="submit" class="btn-login">Entrar no Painel</button>
+    </form>
+
+    <a class="back-link" href="/">← Voltar para o site</a>
+  </div>
+</div>
+
+<footer>Feito com <span>♥</span> para o Terceirão 2026</footer>
+
+<script>
+(function(){
+  const h=document.getElementById('hearts');
+  const e=['❤','💕','💖','🌹','✨'];
+  for(let i=0;i<12;i++){
+    const el=document.createElement('span');
+    el.className='heart-f';
+    el.textContent=e[Math.floor(Math.random()*e.length)];
+    el.style.left=Math.random()*100+'%';
+    el.style.animationDuration=(9+Math.random()*12)+'s';
+    el.style.animationDelay=(Math.random()*15)+'s';
+    el.style.fontSize=(0.7+Math.random()*1.2)+'rem';
+    h.appendChild(el);
+  }
+})();
+function toggleSenha(){
+  const i=document.getElementById('senha-input');
+  const b=document.getElementById('toggle-btn');
+  if(i.type==='password'){i.type='text';b.textContent='🙈';}
+  else{i.type='password';b.textContent='👁';}
+}
+</script>
+</body>
+</html>

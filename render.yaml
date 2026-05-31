@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: correio-elegante-terceirao
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    envVars:
+      - key: SENHA_ADMIN
+        value: escola2024
+      - key: PIX_CHAVE
+        value: SEU-CPF-OU-CHAVE-AQUI
+      - key: PIX_NOME
+        value: "Terceirão 2026"
+      - key: DB_PATH
+        value: /data/correio.db
+    disk:
+      name: db-storage
+      mountPath: /data
+      sizeGB: 1

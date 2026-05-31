@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel Admin — Correio Elegante 💌</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --rose:#c0394a;--rose-light:#f7d6da;--rose-dark:#8b1a28;
+  --blush:#f9eef0;--cream:#fff8f9;
+  --text:#3a1f25;--text-muted:#8a6068;--white:#fff;
+  --green:#1a9e5c;--green-light:#e3f7ee;--green-dark:#127040;
+  --amber:#c9973b;--amber-light:#fff3dc;
+  --blue:#2563eb;--blue-light:#eff6ff;
+  --red-light:#fdecea;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Lato',sans-serif;background:#f4f1f2;color:var(--text);min-height:100vh;}
+
+/* ── HEADER ── */
+.topbar{
+  background:var(--white);border-bottom:1px solid var(--rose-light);
+  padding:.85rem 2rem;display:flex;align-items:center;
+  justify-content:space-between;flex-wrap:wrap;gap:.75rem;
+  position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.06);
+}
+.brand{display:flex;align-items:center;gap:.75rem;}
+.brand-icon{width:38px;height:38px;background:var(--rose);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;}
+.brand-txt h1{font-family:'Playfair Display',serif;font-size:1.15rem;color:var(--rose-dark);line-height:1.1;}
+.brand-txt p{font-size:.72rem;color:var(--text-muted);}
+.topbar-actions{display:flex;gap:.6rem;flex-wrap:wrap;}
+.btn{padding:.5rem 1.05rem;border-radius:8px;border:none;cursor:pointer;font-family:'Lato',sans-serif;font-size:.82rem;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:.4rem;transition:all .15s;white-space:nowrap;}
+.btn:hover{filter:brightness(.9);transform:translateY(-1px);}
+.btn-green{background:var(--green);color:white;}
+.btn-rose{background:var(--rose);color:white;}
+.btn-outline{background:transparent;color:var(--rose);border:1.5px solid var(--rose);}
+.btn-gray{background:#e5e7eb;color:#374151;}
+.btn-sm{padding:.35rem .75rem;font-size:.78rem;}
+
+/* ── LAYOUT ── */
+.page{max-width:1280px;margin:0 auto;padding:1.75rem 1.5rem 4rem;}
+
+/* ── STATS ── */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:1rem;margin-bottom:1.75rem;}
+.stat{background:var(--white);border:1px solid #e8dde0;border-radius:14px;padding:1.2rem 1.4rem;position:relative;overflow:hidden;}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.stat.rose::before{background:var(--rose);}
+.stat.amber::before{background:var(--amber);}
+.stat.green::before{background:var(--green);}
+.stat.blue::before{background:var(--blue);}
+.stat-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:.3rem;}
+.stat-val{font-family:'Playfair Display',serif;font-size:2rem;line-height:1;margin-bottom:.15rem;}
+.stat.rose .stat-val{color:var(--rose-dark);}
+.stat.amber .stat-val{color:#92620a;}
+.stat.green .stat-val{color:var(--green-dark);}
+.stat.blue  .stat-val{color:var(--blue);}
+.stat-sub{font-size:.76rem;color:var(--text-muted);}
+.stat-icon{position:absolute;right:1rem;top:50%;transform:translateY(-50%);font-size:2rem;opacity:.12;}
+
+/* ── CARD TABELA ── */
+.card{background:var(--white);border:1px solid #e8dde0;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.04);}
+.card-header{padding:1.1rem 1.5rem;border-bottom:1px solid #f0e8ea;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.8rem;background:var(--white);}
+.card-title{font-family:'Playfair Display',serif;font-size:1.15rem;color:var(--rose-dark);}
+.card-tools{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;}
+.search{padding:.5rem .9rem .5rem 2.2rem;border:1.5px solid #e0d0d4;border-radius:8px;font-family:'Lato',sans-serif;font-size:.83rem;color:var(--text);background:var(--cream);outline:none;width:200px;transition:border-color .2s;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238a6068' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:.65rem center;}
+.search:focus{border-color:var(--rose);}
+.filter-sel{padding:.5rem .8rem;border:1.5px solid #e0d0d4;border-radius:8px;font-family:'Lato',sans-serif;font-size:.8rem;color:var(--text);background:var(--cream);outline:none;cursor:pointer;}
+.filter-sel:focus{border-color:var(--rose);}
+
+/* ── TABELA ── */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+thead tr{background:#faf5f6;}
+th{padding:.65rem 1rem;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);text-align:left;white-space:nowrap;border-bottom:1px solid #f0e8ea;}
+td{padding:.85rem 1rem;border-bottom:1px solid #f8f2f3;font-size:.86rem;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#fdf8f9;}
+
+/* row finalizada */
+tr.finalizada td{opacity:.65;}
+tr.finalizada .dest-nome{color:var(--green-dark)!important;font-weight:700;}
+tr.finalizada .dest-nome::after{content:' ✓';font-size:.75rem;}
+
+/* badges */
+.badge{display:inline-flex;align-items:center;gap:.3rem;padding:.22rem .65rem;border-radius:20px;font-size:.74rem;font-weight:700;white-space:nowrap;}
+.badge-pago{background:var(--green-light);color:var(--green-dark);}
+.badge-aguard{background:var(--amber-light);color:#92620a;}
+.badge-final{background:#f0f0f0;color:#555;}
+.badge-preco{background:var(--rose-light);color:var(--rose-dark);}
+
+/* mensagem truncada */
+.msg-txt{color:var(--text-muted);font-style:italic;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;}
+.msg-txt:hover{white-space:normal;overflow:visible;}
+
+/* ações */
+.acoes{display:flex;gap:.45rem;align-items:center;}
+.btn-final{background:var(--green-light);color:var(--green-dark);border:1.5px solid #a8dfc4;}
+.btn-final:hover{background:var(--green);color:white;border-color:var(--green);}
+.btn-final.done{background:#f0f0f0;color:#aaa;border-color:#ddd;cursor:default;transform:none;filter:none;}
+.btn-comp{background:var(--blue-light);color:var(--blue);border:1.5px solid #bdd5fb;}
+.btn-comp:hover{background:var(--blue);color:white;border-color:var(--blue);}
+.btn-comp.sem{background:#f5f5f5;color:#bbb;border-color:#e0e0e0;cursor:default;transform:none;filter:none;}
+
+/* countdown */
+.countdown{font-size:.7rem;color:var(--text-muted);white-space:nowrap;}
+.countdown.urgente{color:#c0392b;font-weight:700;}
+
+/* Aviso exclusao */
+.del-timer{font-size:.68rem;color:var(--amber);margin-top:.1rem;}
+
+.empty-state{text-align:center;padding:4rem 2rem;color:var(--text-muted);}
+.empty-state .ei{font-size:3rem;display:block;margin-bottom:.75rem;opacity:.4;}
+
+.tbl-footer{padding:.85rem 1.5rem;border-top:1px solid #f0e8ea;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;font-size:.82rem;color:var(--text-muted);}
+.tbl-total{font-family:'Playfair Display',serif;font-size:1.15rem;color:var(--rose-dark);font-weight:700;}
+
+/* ── MODAL MENSAGEM ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(58,31,37,.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:1rem;opacity:0;pointer-events:none;transition:opacity .25s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--white);border-radius:20px;padding:1.75rem;max-width:440px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.18);transform:translateY(20px);transition:transform .3s cubic-bezier(.34,1.56,.64,1);position:relative;}
+.modal-overlay.open .modal{transform:translateY(0);}
+.modal-close{position:absolute;top:14px;right:16px;background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--text-muted);}
+.modal h3{font-family:'Playfair Display',serif;font-size:1.25rem;color:var(--rose-dark);margin-bottom:.3rem;}
+.modal .sub{font-size:.8rem;color:var(--text-muted);margin-bottom:1rem;}
+.modal .msg-full{background:var(--blush);border-left:3px solid var(--rose);border-radius:0 10px 10px 0;padding:1rem 1.1rem;font-style:italic;font-size:.92rem;line-height:1.7;color:var(--text);}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--text);color:white;padding:.75rem 1.2rem;border-radius:10px;font-size:.85rem;font-weight:700;z-index:500;opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none;}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.verde{background:var(--green);}
+.toast.erro{background:#c0392b;}
+
+/* ── REFRESH ── */
+.refresh-bar{display:flex;align-items:center;gap:.5rem;font-size:.75rem;color:var(--text-muted);}
+.refresh-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+</style>
+</head>
+<body>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Modal mensagem completa -->
+<div class="modal-overlay" id="modal-msg">
+  <div class="modal">
+    <button class="modal-close" onclick="fecharModal()">✕</button>
+    <h3>💌 Mensagem completa</h3>
+    <p class="sub" id="modal-sub"></p>
+    <div class="msg-full" id="modal-msg-txt"></div>
+  </div>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-icon">💌</div>
+    <div class="brand-txt">
+      <h1>Painel Administrativo</h1>
+      <p>Correio Elegante · Terceirão 2026</p>
+    </div>
+  </div>
+  <div class="topbar-actions">
+    <div class="refresh-bar">
+      <div class="refresh-dot"></div>
+      <span id="last-update">Atualizando...</span>
+    </div>
+    <a class="btn btn-green" href="/admin/exportar-csv" download>⬇ Exportar CSV</a>
+    <a class="btn btn-outline" href="/" target="_blank">🌐 Ver Site</a>
+    <a class="btn btn-gray" href="/logout">Sair →</a>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- STATS -->
+  <div class="stats" id="stats">
+    <div class="stat rose">
+      <div class="stat-label">Pedidos pagos</div>
+      <div class="stat-val" id="s-total">—</div>
+      <div class="stat-sub">confirmados</div>
+      <div class="stat-icon">✅</div>
+    </div>
+    <div class="stat amber">
+      <div class="stat-label">Aguardando pag.</div>
+      <div class="stat-val" id="s-aguard">—</div>
+      <div class="stat-sub">sem comprovante</div>
+      <div class="stat-icon">⏳</div>
+    </div>
+    <div class="stat green">
+      <div class="stat-label">Finalizados</div>
+      <div class="stat-val" id="s-final">—</div>
+      <div class="stat-sub">entregues · excluídos em 24h</div>
+      <div class="stat-icon">🎯</div>
+    </div>
+    <div class="stat blue">
+      <div class="stat-label">Arrecadação</div>
+      <div class="stat-val" id="s-arrecad">—</div>
+      <div class="stat-sub">pedidos pagos</div>
+      <div class="stat-icon">💰</div>
+    </div>
+  </div>
+
+  <!-- TABELA -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">📋 Todos os pedidos</span>
+      <div class="card-tools">
+        <select class="filter-sel" id="filtro" onchange="filtrar()">
+          <option value="">Todos</option>
+          <option value="aguardando_pagamento">⏳ Aguardando</option>
+          <option value="pago">✅ Pagos</option>
+          <option value="finalizado">🎯 Finalizados</option>
+        </select>
+        <input class="search" type="text" id="busca" placeholder="Buscar nome, mensagem..." oninput="filtrar()">
+      </div>
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Status</th>
+            <th>Destinatário</th>
+            <th>Remetente</th>
+            <th>Pacote</th>
+            <th>Valor</th>
+            <th>Mensagem</th>
+            <th>Comprovante</th>
+            <th>Data</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr><td colspan="10" style="text-align:center;padding:3rem;color:var(--text-muted);">Carregando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tbl-footer">
+      <span id="footer-info">0 pedidos</span>
+      <span>Total filtrado: <span class="tbl-total" id="footer-total">R$ 0,00</span></span>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+let todos = [];
+let countdownInterval = null;
+
+async function carregar() {
+  try {
+    const r = await fetch('/admin/dados');
+    if (r.status === 401) { window.location = '/login'; return; }
+    const d = await r.json();
+    todos = d.pedidos;
+
+    document.getElementById('s-total').textContent   = d.total_pedidos;
+    document.getElementById('s-aguard').textContent  = d.aguardando;
+    document.getElementById('s-final').textContent   = d.finalizados;
+    document.getElementById('s-arrecad').textContent = 'R$ ' + d.total_geral.toFixed(2).replace('.', ',');
+
+    const agora = new Date();
+    const h = String(agora.getHours()).padStart(2,'0');
+    const m = String(agora.getMinutes()).padStart(2,'0');
+    document.getElementById('last-update').textContent = `Atualizado às ${h}:${m}`;
+
+    filtrar();
+  } catch(e) { console.error(e); }
+}
+
+function filtrar() {
+  const q   = document.getElementById('busca').value.toLowerCase();
+  const fil = document.getElementById('filtro').value;
+  let lista = todos;
+
+  if (fil === 'finalizado') {
+    lista = lista.filter(p => p.finalizado);
+  } else if (fil === 'aguardando_pagamento') {
+    lista = lista.filter(p => p.status === 'aguardando_pagamento' && !p.finalizado);
+  } else if (fil === 'pago') {
+    lista = lista.filter(p => p.status === 'pago' && !p.finalizado);
+  }
+  if (q) lista = lista.filter(p =>
+    p.destinatario.toLowerCase().includes(q) ||
+    p.remetente.toLowerCase().includes(q) ||
+    p.mensagem.toLowerCase().includes(q) ||
+    p.pacote_nome.toLowerCase().includes(q)
+  );
+  renderTabela(lista);
+}
+
+function renderTabela(lista) {
+  const tbody = document.getElementById('tbody');
+  if (!lista.length) {
+    tbody.innerHTML = `<tr><td colspan="10" class="empty-state"><span class="ei">💌</span>Nenhum pedido encontrado.</td></tr>`;
+    document.getElementById('footer-info').textContent = '0 pedidos';
+    document.getElementById('footer-total').textContent = 'R$ 0,00';
+    return;
+  }
+
+  const total = lista.filter(p => p.status === 'pago').reduce((s, p) => s + p.preco, 0);
+
+  tbody.innerHTML = lista.map(p => {
+    // Status badge
+    let statusBadge;
+    if (p.finalizado) {
+      statusBadge = `<span class="badge badge-final">🎯 Finalizado</span>`;
+    } else if (p.status === 'pago') {
+      statusBadge = `<span class="badge badge-pago">✅ Pago</span>`;
+    } else {
+      statusBadge = `<span class="badge badge-aguard">⏳ Aguardando</span>`;
+    }
+
+    // Countdown para exclusão
+    let countdown = '';
+    if (p.finalizado && p.data_finalizado) {
+      const dtFinal = new Date(p.data_finalizado);
+      const dtExclui = new Date(dtFinal.getTime() + 24*3600*1000);
+      const diff = dtExclui - new Date();
+      if (diff > 0) {
+        const h = Math.floor(diff/3600000);
+        const m = Math.floor((diff%3600000)/60000);
+        const cls = h < 2 ? 'urgente' : '';
+        countdown = `<div class="del-timer countdown ${cls}">🗑 excluído em ${h}h${m}m</div>`;
+      }
+    }
+
+    // Comprovante
+    const compBtn = p.tem_comprovante
+      ? `<a class="btn btn-sm btn-comp" href="/admin/comprovante/${p.id}" download title="Baixar comprovante">⬇ Baixar</a>`
+      : `<span class="btn btn-sm btn-comp sem" title="Sem comprovante">Sem arq.</span>`;
+
+    // Botão finalizar
+    const finBtn = p.finalizado
+      ? `<button class="btn btn-sm btn-final done" disabled title="Já finalizado">✓ Feito</button>`
+      : `<button class="btn btn-sm btn-final" onclick="finalizar(${p.id}, this)" title="Marcar como entregue">🎯 Finalizar</button>`;
+
+    const destClass = p.finalizado ? 'dest-nome' : 'dest-nome';
+    const trClass   = p.finalizado ? 'finalizada' : '';
+
+    const dataTrunc = p.data_pedido ? p.data_pedido.split(' ')[0] : '—';
+    const msgTrunc  = p.mensagem.length > 40 ? p.mensagem.substring(0,40)+'…' : p.mensagem;
+
+    return `<tr class="${trClass}" id="row-${p.id}">
+      <td style="color:var(--text-muted);font-size:.78rem;font-weight:700">#${p.id}</td>
+      <td>${statusBadge}</td>
+      <td>
+        <strong class="${destClass}" id="dest-${p.id}">${p.destinatario}</strong>
+        ${countdown}
+      </td>
+      <td style="font-size:.85rem;">${p.remetente}${p.anonimo?'<br><span style="font-size:.68rem;color:var(--text-muted)">(anônimo)</span>':''}</td>
+      <td style="font-size:.82rem;">${p.emoji} ${p.pacote_nome}</td>
+      <td><span class="badge badge-preco">R$ ${p.preco.toFixed(2).replace('.',',')}</span></td>
+      <td>
+        <div class="msg-txt" onclick="verMensagem(${p.id}, '${p.destinatario.replace(/'/g,"\\'")}', '${p.mensagem.replace(/'/g,"\\'").replace(/\n/g,' ')}')" title="Clique para ver completa">
+          ${msgTrunc}
+        </div>
+      </td>
+      <td>${compBtn}</td>
+      <td style="font-size:.78rem;color:var(--text-muted);white-space:nowrap">
+        ${p.data_pedido||'—'}<br>
+        ${p.data_pagamento?'<span style="color:var(--green-dark);font-size:.72rem">pago '+p.data_pagamento+'</span>':''}
+      </td>
+      <td>
+        <div class="acoes">
+          ${finBtn}
+          ${compBtn}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('footer-info').textContent =
+    lista.length + (lista.length === 1 ? ' pedido' : ' pedidos');
+  document.getElementById('footer-total').textContent =
+    'R$ ' + total.toFixed(2).replace('.', ',');
+}
+
+async function finalizar(pid, btn) {
+  if (!confirm('Marcar este pedido como entregue/finalizado?\nEle será excluído automaticamente em 24 horas.')) return;
+
+  btn.disabled = true;
+  btn.textContent = '...';
+
+  const r = await fetch(`/admin/finalizar/${pid}`, { method: 'POST' });
+  const d = await r.json();
+
+  if (d.sucesso) {
+    // Atualiza visual imediatamente
+    const row = document.getElementById(`row-${pid}`);
+    if (row) {
+      row.classList.add('finalizada');
+      const dest = document.getElementById(`dest-${pid}`);
+      if (dest) dest.classList.add('dest-nome');
+    }
+    btn.textContent = '✓ Feito';
+    btn.classList.add('done');
+    btn.disabled = true;
+    toast('✅ Pedido finalizado! Será excluído em 24h.', 'verde');
+    setTimeout(carregar, 800);
+  } else {
+    btn.disabled = false;
+    btn.textContent = '🎯 Finalizar';
+    toast('Erro ao finalizar.', 'erro');
+  }
+}
+
+function verMensagem(id, dest, msg) {
+  document.getElementById('modal-sub').textContent = `Para: ${dest}`;
+  document.getElementById('modal-msg-txt').textContent = msg;
+  document.getElementById('modal-msg').classList.add('open');
+}
+function fecharModal() {
+  document.getElementById('modal-msg').classList.remove('open');
+}
+document.getElementById('modal-msg').addEventListener('click', function(e) {
+  if (e.target === this) fecharModal();
+});
+
+function toast(msg, tipo) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + (tipo||'');
+  setTimeout(() => t.className = 'toast', 3500);
+}
+
+// Auto-refresh a cada 30s
+carregar();
+setInterval(carregar, 30000);
+</script>
+</body>
+</html>

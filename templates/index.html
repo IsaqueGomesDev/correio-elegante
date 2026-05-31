@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Correio Elegante 💌 Terceirão 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --rose:#c0394a; --rose-light:#f7d6da; --rose-dark:#8b1a28;
+  --blush:#f9eef0; --cream:#fff8f9; --gold:#c9973b; --gold-light:#f5e6cc;
+  --text:#3a1f25; --text-muted:#8a6068; --white:#ffffff;
+  --green:#1a9e5c; --green-light:#e3f7ee;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Lato',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+.hearts-bg{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden;}
+.heart-float{position:absolute;opacity:0.07;animation:floatUp linear infinite;}
+@keyframes floatUp{0%{transform:translateY(100vh) rotate(0deg);opacity:0.07;}100%{transform:translateY(-10vh) rotate(360deg);opacity:0;}}
+
+.container{max-width:860px;margin:0 auto;padding:0 1.5rem 4rem;position:relative;z-index:1;}
+
+/* ── HERO com imagem ── */
+.hero{position:relative;text-align:center;padding:0 0 2rem;overflow:hidden;}
+.hero-img-wrap{
+  width:100%;max-width:420px;margin:0 auto 1.5rem;
+  border-radius:24px;overflow:hidden;
+  box-shadow:0 12px 40px rgba(192,57,74,0.18);
+}
+.hero-img-wrap img{width:100%;display:block;}
+.header-badge{display:inline-block;background:var(--gold-light);border:1px solid var(--gold);color:var(--gold);font-size:0.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;padding:.35rem 1rem;border-radius:20px;margin-bottom:.75rem;}
+h1{font-family:'Playfair Display',serif;font-size:clamp(2rem,5vw,3.2rem);color:var(--rose-dark);line-height:1.1;margin-bottom:.4rem;}
+h1 em{color:var(--rose);font-style:italic;}
+.hero p{color:var(--text-muted);font-size:1rem;font-weight:300;margin-top:.5rem;}
+.divider{display:flex;align-items:center;justify-content:center;gap:1rem;margin-top:1.2rem;color:var(--rose);font-size:1.3rem;}
+.divider::before,.divider::after{content:'';width:80px;height:1px;background:linear-gradient(to right,transparent,var(--rose-light),transparent);}
+
+/* ── Pacotes ── */
+.section-title{font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--rose-dark);margin-bottom:1.1rem;text-align:center;}
+.pacotes-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:.85rem;margin-bottom:2rem;}
+.pacote-card{background:var(--white);border:2px solid var(--rose-light);border-radius:16px;padding:1.2rem .85rem 1rem;text-align:center;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;user-select:none;}
+.pacote-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,var(--rose-light) 0%,transparent 70%);opacity:0;transition:opacity .3s;}
+.pacote-card:hover{border-color:var(--rose);transform:translateY(-3px);box-shadow:0 8px 24px rgba(192,57,74,.12);}
+.pacote-card:hover::before{opacity:1;}
+.pacote-card.sel{border-color:var(--rose);background:var(--blush);box-shadow:0 6px 20px rgba(192,57,74,.18);}
+.pacote-card.sel::before{opacity:1;}
+.pacote-emoji{font-size:2rem;margin-bottom:.45rem;display:block;position:relative;z-index:1;}
+.pacote-nome{font-size:.8rem;font-weight:700;color:var(--text);margin-bottom:.3rem;position:relative;z-index:1;line-height:1.3;}
+.pacote-preco{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--rose);font-weight:700;position:relative;z-index:1;}
+.check-badge{position:absolute;top:8px;right:8px;width:22px;height:22px;background:var(--rose);border-radius:50%;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;z-index:2;}
+.pacote-card.sel .check-badge{opacity:1;}
+.check-badge::after{content:'✓';color:white;font-size:.75rem;font-weight:700;}
+
+/* ── Formulário ── */
+.form-card{background:var(--white);border:1px solid var(--rose-light);border-radius:20px;padding:2rem 2rem 1.75rem;margin-bottom:2rem;box-shadow:0 4px 30px rgba(192,57,74,.06);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;}
+@media(max-width:540px){.form-row{grid-template-columns:1fr;}}
+.form-group{display:flex;flex-direction:column;gap:.4rem;margin-bottom:1rem;}
+label{font-size:.8rem;font-weight:700;color:var(--text-muted);letter-spacing:.05em;text-transform:uppercase;}
+input[type=text],textarea{padding:.7rem 1rem;border:1.5px solid var(--rose-light);border-radius:10px;font-family:'Lato',sans-serif;font-size:.95rem;color:var(--text);background:var(--cream);transition:border-color .2s,box-shadow .2s;outline:none;resize:none;}
+input[type=text]:focus,textarea:focus{border-color:var(--rose);box-shadow:0 0 0 3px rgba(192,57,74,.08);background:var(--white);}
+textarea{min-height:120px;line-height:1.6;}
+.char-count{font-size:.75rem;color:var(--text-muted);text-align:right;margin-top:-.5rem;}
+.char-count.warn{color:var(--rose);}
+.anonimo-row{display:flex;align-items:center;gap:.6rem;margin-bottom:1.1rem;cursor:pointer;}
+.anonimo-row input[type=checkbox]{width:18px;height:18px;accent-color:var(--rose);cursor:pointer;}
+.anonimo-row span{font-size:.9rem;color:var(--text-muted);}
+
+.total-bar{display:flex;align-items:center;justify-content:space-between;background:var(--blush);border:1px solid var(--rose-light);border-radius:12px;padding:.85rem 1.2rem;margin-bottom:1.1rem;}
+.total-label{font-size:.8rem;color:var(--text-muted);font-weight:700;letter-spacing:.05em;text-transform:uppercase;}
+.total-valor{font-family:'Playfair Display',serif;font-size:1.45rem;color:var(--rose-dark);font-weight:700;}
+.total-pacote-name{font-size:.78rem;color:var(--text-muted);margin-top:2px;}
+
+.btn-enviar{width:100%;padding:1rem;background:var(--rose);color:white;border:none;border-radius:12px;font-family:'Playfair Display',serif;font-size:1.1rem;font-style:italic;cursor:pointer;transition:background .2s,transform .15s,box-shadow .2s;display:flex;align-items:center;justify-content:center;gap:.5rem;box-shadow:0 4px 16px rgba(192,57,74,.25);}
+.btn-enviar:hover{background:var(--rose-dark);transform:translateY(-2px);box-shadow:0 8px 24px rgba(192,57,74,.35);}
+.btn-enviar:active{transform:scale(.99);}
+.btn-enviar:disabled{background:#ccc;cursor:not-allowed;box-shadow:none;transform:none;}
+
+/* ── MODAL PIX ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(58,31,37,.55);z-index:200;display:flex;align-items:center;justify-content:center;padding:1rem;opacity:0;pointer-events:none;transition:opacity .3s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--white);border-radius:24px;padding:2rem;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.2);transform:translateY(30px);transition:transform .35s cubic-bezier(.34,1.56,.64,1);position:relative;}
+.modal-overlay.open .modal{transform:translateY(0);}
+.modal-close{position:absolute;top:14px;right:16px;background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--text-muted);line-height:1;}
+.modal h2{font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--rose-dark);margin-bottom:.3rem;text-align:center;}
+.modal .sub{font-size:.85rem;color:var(--text-muted);text-align:center;margin-bottom:1.3rem;}
+
+.pix-valor{font-family:'Playfair Display',serif;font-size:2rem;color:var(--rose);text-align:center;font-weight:700;margin-bottom:1rem;}
+.qr-wrap{text-align:center;margin-bottom:1.1rem;}
+.qr-wrap img{width:200px;height:200px;border:3px solid var(--rose-light);border-radius:12px;}
+.pix-chave-box{background:var(--blush);border:1px dashed var(--rose);border-radius:10px;padding:.75rem 1rem;margin-bottom:1.1rem;display:flex;align-items:center;justify-content:space-between;gap:.5rem;}
+.pix-chave-label{font-size:.72rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;}
+.pix-chave-valor{font-size:.95rem;font-weight:700;color:var(--rose-dark);word-break:break-all;}
+.btn-copy{background:var(--rose);color:white;border:none;border-radius:8px;padding:.4rem .9rem;font-size:.8rem;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background .15s;}
+.btn-copy:hover{background:var(--rose-dark);}
+.btn-copy.copied{background:var(--green);}
+
+.upload-area{border:2px dashed var(--rose-light);border-radius:12px;padding:1.2rem;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;margin-bottom:1rem;}
+.upload-area:hover,.upload-area.drag{border-color:var(--rose);background:var(--blush);}
+.upload-area input{display:none;}
+.upload-icon{font-size:1.8rem;margin-bottom:.4rem;}
+.upload-text{font-size:.85rem;color:var(--text-muted);}
+.upload-text strong{color:var(--rose);}
+.upload-preview{margin-top:.6rem;}
+.upload-preview img{max-width:100%;max-height:120px;border-radius:8px;border:1px solid var(--rose-light);}
+
+.btn-confirmar{width:100%;padding:.85rem;background:var(--green);color:white;border:none;border-radius:12px;font-family:'Lato',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;transition:background .2s,transform .15s;box-shadow:0 4px 14px rgba(26,158,92,.25);}
+.btn-confirmar:hover{background:#158a4e;transform:translateY(-1px);}
+.btn-confirmar:disabled{background:#ccc;cursor:not-allowed;transform:none;}
+
+.step-indicator{display:flex;align-items:center;justify-content:center;gap:.5rem;margin-bottom:1.2rem;}
+.step{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;}
+.step.active{background:var(--rose);color:white;}
+.step.done{background:var(--green);color:white;}
+.step.inactive{background:var(--rose-light);color:var(--rose);}
+.step-line{width:28px;height:2px;background:var(--rose-light);}
+
+/* ── Sucesso ── */
+.sucesso-box{text-align:center;padding:1rem 0;}
+.sucesso-box .check-big{font-size:3.5rem;margin-bottom:.5rem;}
+.sucesso-box h3{font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--green);margin-bottom:.4rem;}
+.sucesso-box p{font-size:.9rem;color:var(--text-muted);}
+
+/* ── Notificação ── */
+.notif{position:fixed;top:1.5rem;left:50%;transform:translateX(-50%) translateY(-120px);background:var(--white);border:1.5px solid var(--rose-light);border-left:4px solid var(--rose);border-radius:12px;padding:1rem 1.5rem;box-shadow:0 8px 30px rgba(0,0,0,.12);z-index:999;transition:transform .4s cubic-bezier(.34,1.56,.64,1);text-align:center;min-width:260px;}
+.notif.show{transform:translateX(-50%) translateY(0);}
+.notif .nt{font-family:'Playfair Display',serif;font-size:1rem;color:var(--rose-dark);margin-bottom:.2rem;}
+.notif .ns{font-size:.83rem;color:var(--text-muted);}
+.notif.erro{border-left-color:#e74c3c;}
+.notif.erro .nt{color:#c0392b;}
+
+/* ── Pedidos ── */
+.pedidos-section{margin-top:3rem;}
+.pedidos-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;}
+.pedidos-header h2{font-family:'Playfair Display',serif;font-size:1.35rem;color:var(--rose-dark);}
+.pedidos-count{background:var(--rose-light);color:var(--rose);font-size:.75rem;font-weight:700;padding:.25rem .75rem;border-radius:20px;}
+.pedido-card{background:var(--white);border:1px solid var(--rose-light);border-radius:16px;padding:1.1rem 1.4rem;margin-bottom:.8rem;display:grid;grid-template-columns:auto 1fr auto;gap:.9rem;align-items:start;animation:slideIn .4s ease;transition:box-shadow .2s;}
+.pedido-card:hover{box-shadow:0 4px 16px rgba(192,57,74,.08);}
+@keyframes slideIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.pedido-emoji{font-size:1.7rem;padding-top:2px;}
+.pedido-para{font-size:.68rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.07em;}
+.pedido-dest{font-weight:700;font-size:.98rem;color:var(--text);margin:.1rem 0;}
+.pedido-de{font-size:.8rem;color:var(--text-muted);}
+.pedido-msg{font-size:.86rem;color:var(--text-muted);margin-top:.35rem;font-style:italic;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.pedido-meta{text-align:right;}
+.pedido-preco{font-family:'Playfair Display',serif;font-size:.98rem;color:var(--rose);font-weight:700;}
+.pedido-data{font-size:.7rem;color:var(--text-muted);margin-top:.2rem;}
+.pedido-pacote{font-size:.7rem;color:var(--text-muted);margin-top:.15rem;white-space:nowrap;}
+.empty-state{text-align:center;padding:3rem;color:var(--text-muted);font-size:.93rem;}
+.empty-state .ei{font-size:3rem;display:block;margin-bottom:.7rem;opacity:.5;}
+
+footer{text-align:center;padding:2rem 0 1rem;color:var(--text-muted);font-size:.8rem;}
+footer span{color:var(--rose);}
+</style>
+</head>
+<body>
+
+<div class="hearts-bg" id="hearts"></div>
+<div class="notif" id="notif"><div class="nt" id="nt"></div><div class="ns" id="ns"></div></div>
+
+<!-- MODAL PIX -->
+<div class="modal-overlay" id="modal-pix">
+  <div class="modal">
+    <button class="modal-close" onclick="fecharModal()">✕</button>
+
+    <!-- Etapas -->
+    <div class="step-indicator">
+      <div class="step active" id="st1">1</div>
+      <div class="step-line"></div>
+      <div class="step inactive" id="st2">2</div>
+      <div class="step-line"></div>
+      <div class="step inactive" id="st3">✓</div>
+    </div>
+
+    <!-- Passo 1: QR Code -->
+    <div id="passo1">
+      <h2>💸 Pague com Pix</h2>
+      <p class="sub">Escaneie o QR Code ou copie a chave</p>
+      <div class="pix-valor" id="pix-valor-text">R$ 0,00</div>
+      <div class="qr-wrap">
+        <img id="qr-img" src="" alt="QR Code Pix">
+      </div>
+      <div class="pix-chave-box">
+        <div>
+          <div class="pix-chave-label">Chave Pix</div>
+          <div class="pix-chave-valor" id="pix-chave-display">{{ pix_chave }}</div>
+        </div>
+        <button class="btn-copy" id="btn-copy" onclick="copiarChave()">Copiar</button>
+      </div>
+      <p style="font-size:.78rem;color:var(--text-muted);text-align:center;margin-bottom:1rem;">
+        Destinatário: <strong>{{ pix_nome }}</strong>
+      </p>
+      <button class="btn-confirmar" onclick="irParaUpload()">Já paguei! Enviar comprovante →</button>
+    </div>
+
+    <!-- Passo 2: Upload comprovante -->
+    <div id="passo2" style="display:none;">
+      <h2>📎 Comprovante</h2>
+      <p class="sub">Envie a foto ou print do comprovante</p>
+      <div class="upload-area" id="upload-area" onclick="document.getElementById('comp-file').click()" ondragover="dragOver(event)" ondrop="dropFile(event)" ondragleave="dragLeave()">
+        <input type="file" id="comp-file" accept="image/*,.pdf" onchange="previewFile(this)">
+        <div class="upload-icon">📷</div>
+        <div class="upload-text">Clique ou arraste o comprovante<br><strong>JPG, PNG ou PDF • máx. 5MB</strong></div>
+        <div class="upload-preview" id="upload-preview"></div>
+      </div>
+      <button class="btn-confirmar" id="btn-confirmar" onclick="confirmarPagamento()">✅ Confirmar pagamento</button>
+    </div>
+
+    <!-- Passo 3: Sucesso -->
+    <div id="passo3" style="display:none;">
+      <div class="sucesso-box">
+        <div class="check-big">🎉</div>
+        <h3>Correio enviado!</h3>
+        <p>Seu pedido foi registrado com o comprovante.<br>O amor está no ar! 💕</p>
+        <button class="btn-confirmar" style="margin-top:1.5rem;" onclick="fecharModal()">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AVISO ADMIN (tooltip) -->
+<div id="aviso-admin" style="display:none;position:fixed;top:0;left:0;right:0;z-index:300;background:rgba(58,31,37,.6);display:none;align-items:center;justify-content:center;padding:1rem;">
+  <div style="background:white;border-radius:16px;padding:1.5rem 2rem;max-width:380px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.2);">
+    <div style="font-size:2rem;margin-bottom:.5rem;">🔐</div>
+    <h3 style="font-family:'Playfair Display',serif;color:#8b1a28;margin-bottom:.4rem;">Área Restrita</h3>
+    <p style="font-size:.88rem;color:#8a6068;line-height:1.6;margin-bottom:1.2rem;">Esta área é <strong>exclusiva para administradores</strong>.<br>Se você é aluno, fique aqui mesmo para enviar seu correio! 💌</p>
+    <div style="display:flex;gap:.75rem;justify-content:center;">
+      <button onclick="fecharAvisoAdmin()" style="padding:.55rem 1.2rem;border-radius:8px;border:1.5px solid #f7d6da;background:transparent;color:#c0394a;font-weight:700;font-family:'Lato',sans-serif;cursor:pointer;font-size:.85rem;">Voltar</button>
+      <a href="/login" style="padding:.55rem 1.2rem;border-radius:8px;border:none;background:#c0394a;color:white;font-weight:700;font-family:'Lato',sans-serif;cursor:pointer;font-size:.85rem;text-decoration:none;">Sou admin →</a>
+    </div>
+  </div>
+</div>
+
+<!-- TOPBAR LOGIN -->
+<div style="position:sticky;top:0;z-index:100;background:rgba(255,248,249,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--rose-light);padding:.6rem 1.5rem;display:flex;justify-content:flex-end;">
+  {% if is_admin %}
+  <a href="/admin" style="display:inline-flex;align-items:center;gap:.4rem;padding:.45rem 1rem;background:var(--rose);color:white;border-radius:8px;font-size:.8rem;font-weight:700;font-family:'Lato',sans-serif;text-decoration:none;">⚙️ Painel Admin</a>
+  {% else %}
+  <button onclick="mostrarAvisoAdmin()" style="display:inline-flex;align-items:center;gap:.4rem;padding:.45rem 1rem;background:transparent;color:var(--text-muted);border:1.5px solid var(--rose-light);border-radius:8px;font-size:.8rem;font-weight:700;font-family:'Lato',sans-serif;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--rose)';this.style.color='var(--rose)'" onmouseout="this.style.borderColor='var(--rose-light)';this.style.color='var(--text-muted)'">🔐 Login</button>
+  {% endif %}
+</div>
+
+<div class="container">
+  <header class="hero">
+    <div class="hero-img-wrap">
+      <img src="/static/terceirao.jpg" alt="Terceirão 2026 — o amor está no ar">
+    </div>
+    <div class="header-badge">💝 12 de junho • Terceirão 2026</div>
+    <h1>Correio <em>Elegante</em></h1>
+    <p>Envie uma mensagem especial para quem você ama</p>
+    <div class="divider">❤</div>
+  </header>
+
+  <section style="margin-bottom:1.5rem;">
+    <p class="section-title">Escolha seu pacote</p>
+    <div class="pacotes-grid">
+      {% for id, p in pacotes.items() %}
+      <div class="pacote-card" data-id="{{ id }}" data-preco="{{ p.preco }}" data-nome="{{ p.nome }}" onclick="selPacote(this)">
+        <div class="check-badge"></div>
+        <span class="pacote-emoji">{{ p.emoji }}</span>
+        <div class="pacote-nome">{{ p.nome }}</div>
+        <div class="pacote-preco">R$ {{ "%.2f"|format(p.preco) }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <div class="form-card">
+    <div class="form-row">
+      <div class="form-group">
+        <label>De (remetente)</label>
+        <input type="text" id="remetente" placeholder="Seu nome..." maxlength="60">
+      </div>
+      <div class="form-group">
+        <label>Para * (destinatário)</label>
+        <input type="text" id="destinatario" placeholder="Nome do amor..." maxlength="60">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Sua mensagem *</label>
+      <textarea id="mensagem" placeholder="Escreva aqui o que seu coração quer dizer... 💕" maxlength="500"></textarea>
+      <div class="char-count" id="char-count">0 / 500</div>
+    </div>
+    <label class="anonimo-row">
+      <input type="checkbox" id="anonimo">
+      <span>Enviar anonimamente 🎭</span>
+    </label>
+    <div class="total-bar">
+      <div>
+        <div class="total-label">Total a pagar</div>
+        <div class="total-pacote-name" id="total-pac">Nenhum pacote selecionado</div>
+      </div>
+      <div class="total-valor" id="total-val">R$ 0,00</div>
+    </div>
+    <button class="btn-enviar" onclick="abrirPix()">
+      <span>💳</span> Continuar para o Pagamento
+    </button>
+  </div>
+
+  <section class="pedidos-section">
+    <div class="pedidos-header">
+      <h2>Correios Enviados 💌</h2>
+      <span class="pedidos-count" id="pedidos-count">0 mensagens</span>
+    </div>
+    <div id="pedidos-lista">
+      <div class="empty-state"><span class="ei">💌</span>Nenhum correio enviado ainda.<br>Seja o primeiro a declarar seu amor!</div>
+    </div>
+  </section>
+
+  <footer>Feito com <span>♥</span> para o Terceirão 2026</footer>
+</div>
+
+<script>
+const PIX_CHAVE = "{{ pix_chave }}";
+const PIX_NOME  = "{{ pix_nome }}";
+let pacSel = null, pedidoAtual = null;
+
+// Corações flutuantes
+(function(){
+  const h=document.getElementById('hearts');
+  const e=['❤','💕','💖','💗','💓','🌹','✨'];
+  for(let i=0;i<16;i++){
+    const el=document.createElement('span');
+    el.className='heart-float';
+    el.textContent=e[Math.floor(Math.random()*e.length)];
+    el.style.left=Math.random()*100+'%';
+    el.style.animationDuration=(9+Math.random()*12)+'s';
+    el.style.animationDelay=(Math.random()*15)+'s';
+    el.style.fontSize=(0.8+Math.random()*1.3)+'rem';
+    h.appendChild(el);
+  }
+})();
+
+function selPacote(el){
+  document.querySelectorAll('.pacote-card').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  pacSel={id:el.dataset.id,preco:parseFloat(el.dataset.preco),nome:el.dataset.nome};
+  document.getElementById('total-val').textContent='R$ '+pacSel.preco.toFixed(2).replace('.',',');
+  document.getElementById('total-pac').textContent=pacSel.nome;
+}
+
+document.getElementById('mensagem').addEventListener('input',function(){
+  const l=this.value.length;
+  const cc=document.getElementById('char-count');
+  cc.textContent=l+' / 500';
+  cc.className='char-count'+(l>450?' warn':'');
+});
+
+function notif(titulo,sub,erro){
+  const n=document.getElementById('notif');
+  document.getElementById('nt').textContent=titulo;
+  document.getElementById('ns').textContent=sub;
+  n.className='notif'+(erro?' erro':'')+' show';
+  setTimeout(()=>n.classList.remove('show'),4500);
+}
+
+// ── PASSO 1: criar pedido e abrir modal Pix
+async function abrirPix(){
+  const dest=document.getElementById('destinatario').value.trim();
+  const msg=document.getElementById('mensagem').value.trim();
+  if(!dest){notif('Oops!','Informe o destinatário.',true);return;}
+  if(!pacSel){notif('Escolha um pacote!','Selecione um dos pacotes acima.',true);return;}
+  if(!msg){notif('Falta a mensagem!','Escreva algo especial.',true);return;}
+
+  const btn=document.querySelector('.btn-enviar');
+  btn.disabled=true;btn.textContent='Aguarde...';
+
+  const resp=await fetch('/criar-pedido',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      remetente:document.getElementById('remetente').value.trim(),
+      destinatario:dest,pacote:pacSel.id,
+      mensagem:msg,anonimo:document.getElementById('anonimo').checked
+    })
+  });
+  const d=await resp.json();
+  btn.disabled=false;btn.innerHTML='<span>💳</span> Continuar para o Pagamento';
+
+  if(!d.sucesso){notif('Erro!',d.erro,true);return;}
+  pedidoAtual=d;
+
+  // Preencher modal
+  const preco=d.preco.toFixed(2).replace('.',',');
+  document.getElementById('pix-valor-text').textContent='R$ '+preco;
+  document.getElementById('pix-chave-display').textContent=PIX_CHAVE;
+
+  // QR Code via API pública (goqr.me)
+  const pixPayload=`PIX: ${PIX_CHAVE} | Valor: R$ ${preco} | ${PIX_NOME}`;
+  document.getElementById('qr-img').src=
+    `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(PIX_CHAVE)}`;
+
+  mostrarPasso(1);
+  document.getElementById('modal-pix').classList.add('open');
+}
+
+function mostrarPasso(n){
+  ['passo1','passo2','passo3'].forEach((id,i)=>{
+    document.getElementById(id).style.display=(i+1===n?'block':'none');
+  });
+  ['st1','st2','st3'].forEach((id,i)=>{
+    const el=document.getElementById(id);
+    el.className='step '+(i+1<n?'done':i+1===n?'active':'inactive');
+  });
+}
+
+function fecharModal(){
+  document.getElementById('modal-pix').classList.remove('open');
+  setTimeout(()=>mostrarPasso(1),400);
+  document.getElementById('upload-preview').innerHTML='';
+  document.getElementById('comp-file').value='';
+}
+
+function copiarChave(){
+  navigator.clipboard.writeText(PIX_CHAVE).then(()=>{
+    const b=document.getElementById('btn-copy');
+    b.textContent='Copiado!';b.classList.add('copied');
+    setTimeout(()=>{b.textContent='Copiar';b.classList.remove('copied');},2000);
+  });
+}
+
+function irParaUpload(){mostrarPasso(2);}
+
+function previewFile(input){
+  const f=input.files[0];
+  if(!f)return;
+  const prev=document.getElementById('upload-preview');
+  if(f.type.startsWith('image/')){
+    const r=new FileReader();
+    r.onload=e=>prev.innerHTML=`<img src="${e.target.result}" alt="preview">`;
+    r.readAsDataURL(f);
+  } else {
+    prev.innerHTML=`<p style="font-size:.82rem;color:var(--green);margin-top:.5rem">📄 ${f.name}</p>`;
+  }
+}
+
+function dragOver(e){e.preventDefault();document.getElementById('upload-area').classList.add('drag');}
+function dragLeave(){document.getElementById('upload-area').classList.remove('drag');}
+function dropFile(e){
+  e.preventDefault();dragLeave();
+  const f=e.dataTransfer.files[0];
+  if(f){
+    const dt=new DataTransfer();dt.items.add(f);
+    const inp=document.getElementById('comp-file');
+    inp.files=dt.files;
+    previewFile(inp);
+  }
+}
+
+async function confirmarPagamento(){
+  if(!pedidoAtual){return;}
+  const comp=document.getElementById('comp-file').files[0];
+  const btn=document.getElementById('btn-confirmar');
+  btn.disabled=true;btn.textContent='Enviando...';
+
+  const fd=new FormData();
+  fd.append('pedido_id',pedidoAtual.pedido_id);
+  if(comp)fd.append('comprovante',comp);
+
+  const resp=await fetch('/confirmar-pagamento',{method:'POST',body:fd});
+  const d=await resp.json();
+  btn.disabled=false;btn.textContent='✅ Confirmar pagamento';
+
+  if(!d.sucesso){notif('Erro!',d.erro,true);return;}
+
+  mostrarPasso(3);
+  // Limpar form
+  ['remetente','destinatario','mensagem'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('char-count').textContent='0 / 500';
+  document.getElementById('anonimo').checked=false;
+  document.querySelectorAll('.pacote-card').forEach(c=>c.classList.remove('sel'));
+  pacSel=null;
+  document.getElementById('total-val').textContent='R$ 0,00';
+  document.getElementById('total-pac').textContent='Nenhum pacote selecionado';
+  carregarPedidos();
+}
+
+async function carregarPedidos(){
+  const resp=await fetch('/pedidos');
+  const pedidos=await resp.json();
+  const lista=document.getElementById('pedidos-lista');
+  document.getElementById('pedidos-count').textContent=
+    pedidos.length+(pedidos.length===1?' correio':' correios');
+  if(!pedidos.length){
+    lista.innerHTML='<div class="empty-state"><span class="ei">💌</span>Nenhum correio enviado ainda.<br>Seja o primeiro a declarar seu amor!</div>';
+    return;
+  }
+  // Exibição pública: mostra só destinatário e pacote (remetente e mensagem são privados)
+  lista.innerHTML=pedidos.map(p=>`
+    <div class="pedido-card">
+      <div class="pedido-emoji">${p.emoji}</div>
+      <div>
+        <div class="pedido-para">Correio para</div>
+        <div class="pedido-dest">${p.destinatario}</div>
+        <div class="pedido-de" style="font-style:italic;opacity:.7">💌 ${p.pacote_nome}</div>
+      </div>
+      <div class="pedido-meta">
+        <div class="pedido-preco">R$ ${p.preco.toFixed(2).replace('.',',')}</div>
+        <div class="pedido-data">${p.data_pedido}</div>
+      </div>
+    </div>`).join('');
+}
+
+function mostrarAvisoAdmin(){
+  const el=document.getElementById('aviso-admin');
+  el.style.display='flex';
+}
+function fecharAvisoAdmin(){
+  document.getElementById('aviso-admin').style.display='none';
+}
+// fecha ao clicar fora
+document.getElementById('aviso-admin').addEventListener('click',function(e){
+  if(e.target===this)fecharAvisoAdmin();
+});
+
+carregarPedidos();
+</script>
+</body>
+</html>
