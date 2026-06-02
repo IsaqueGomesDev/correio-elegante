@@ -225,8 +225,10 @@ tr.finalizada .dest-nome::after{content:' ✓';font-size:.75rem;}
             <th>#</th>
             <th>Status</th>
             <th>Destinatário</th>
+            <th>Turma / Turno</th>
+            <th>Entrega</th>
             <th>Remetente</th>
-            <th>Pacote</th>
+            <th>Pacote + Adicionais</th>
             <th>Valor</th>
             <th>Mensagem</th>
             <th>Comprovante</th>
@@ -297,7 +299,7 @@ function filtrar() {
 function renderTabela(lista) {
   const tbody = document.getElementById('tbody');
   if (!lista.length) {
-    tbody.innerHTML = `<tr><td colspan="10" class="empty-state"><span class="ei">💌</span>Nenhum pedido encontrado.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="12" class="empty-state"><span class="ei">💌</span>Nenhum pedido encontrado.</td></tr>`;
     document.getElementById('footer-info').textContent = '0 pedidos';
     document.getElementById('footer-total').textContent = 'R$ 0,00';
     return;
@@ -340,9 +342,20 @@ function renderTabela(lista) {
       <td>
         <strong class="${destClass}" id="dest-${p.id}">${p.destinatario}</strong>
       </td>
+      <td style="font-size:.82rem;">
+        <span style="font-weight:700">${p.turma||'—'}</span><br>
+        <span style="color:var(--text-muted)">${p.turno||'—'}</span>
+      </td>
+      <td style="font-size:.82rem;white-space:nowrap">
+        📅 ${p.dia_entrega||'—'}
+      </td>
       <td style="font-size:.85rem;">${p.remetente}${p.anonimo?'<br><span style="font-size:.68rem;color:var(--text-muted)">(anônimo)</span>':''}</td>
-      <td style="font-size:.82rem;">${p.emoji} ${p.pacote_nome}</td>
-      <td><span class="badge badge-preco">R$ ${p.preco.toFixed(2).replace('.',',')}</span></td>
+      <td style="font-size:.82rem;">
+        ${p.emoji} ${p.pacote_nome}
+        ${p.adicional_serenata?`<br><span style="font-size:.72rem;color:var(--rose)">🎵 Serenata${p.musica_serenata?' — '+p.musica_serenata:''}</span>`:''}
+        ${p.adicional_caixa?`<br><span style="font-size:.72rem;color:var(--rose)">🔊 Caixa${p.musica_caixa?' — '+p.musica_caixa:''}</span>`:''}
+      </td>
+      <td><span class="badge badge-preco">R$ ${(p.total||p.preco).toFixed(2).replace('.',',')}</span></td>
       <td>
         <div class="msg-txt" onclick="verMensagem(${p.id}, '${p.destinatario.replace(/'/g,"\\'")}', '${p.mensagem.replace(/'/g,"\\'").replace(/\n/g,' ')}')" title="Clique para ver completa">
           ${msgTrunc}

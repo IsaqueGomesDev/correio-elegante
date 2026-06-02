@@ -31,26 +31,43 @@ def init_db():
     with get_db() as conn:
         conn.execute("""
             CREATE TABLE IF NOT EXISTS pedidos (
-                id              INTEGER PRIMARY KEY AUTOINCREMENT,
-                remetente       TEXT NOT NULL,
-                destinatario    TEXT NOT NULL,
-                pacote_id       TEXT NOT NULL,
-                pacote_nome     TEXT NOT NULL,
-                emoji           TEXT NOT NULL,
-                preco           REAL NOT NULL,
-                mensagem        TEXT NOT NULL,
-                anonimo         INTEGER NOT NULL DEFAULT 0,
-                status          TEXT NOT NULL DEFAULT 'aguardando_pagamento',
-                comprovante     TEXT,
-                data_pedido     TEXT NOT NULL,
-                data_pagamento  TEXT,
-                finalizado      INTEGER NOT NULL DEFAULT 0,
-                data_finalizado TEXT
+                id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+                remetente           TEXT NOT NULL,
+                destinatario        TEXT NOT NULL,
+                turma               TEXT NOT NULL DEFAULT '',
+                turno               TEXT NOT NULL DEFAULT '',
+                dia_entrega         TEXT NOT NULL DEFAULT '',
+                pacote_id           TEXT NOT NULL,
+                pacote_nome         TEXT NOT NULL,
+                emoji               TEXT NOT NULL,
+                preco               REAL NOT NULL,
+                adicional_serenata  INTEGER NOT NULL DEFAULT 0,
+                adicional_caixa     INTEGER NOT NULL DEFAULT 0,
+                total               REAL NOT NULL DEFAULT 0,
+                mensagem            TEXT NOT NULL,
+                anonimo             INTEGER NOT NULL DEFAULT 0,
+                status              TEXT NOT NULL DEFAULT 'aguardando_pagamento',
+                comprovante         TEXT,
+                data_pedido         TEXT NOT NULL,
+                data_pagamento      TEXT,
+                finalizado          INTEGER NOT NULL DEFAULT 0,
+                data_finalizado     TEXT
             )
         """)
-        # adiciona colunas novas em bancos antigos sem errar
-        for col, dfn in [("finalizado","INTEGER NOT NULL DEFAULT 0"),
-                         ("data_finalizado","TEXT")]:
+        for col, dfn in [
+            ("turma","TEXT NOT NULL DEFAULT ''"),
+            ("turno","TEXT NOT NULL DEFAULT ''"),
+            ("dia_entrega","TEXT NOT NULL DEFAULT ''"),
+            ("turma_dest","TEXT NOT NULL DEFAULT ''"),
+            ("turno_dest","TEXT NOT NULL DEFAULT ''"),
+            ("adicional_serenata","INTEGER NOT NULL DEFAULT 0"),
+            ("adicional_caixa","INTEGER NOT NULL DEFAULT 0"),
+            ("total","REAL NOT NULL DEFAULT 0"),
+            ("musica_serenata","TEXT NOT NULL DEFAULT ''"),
+            ("musica_caixa","TEXT NOT NULL DEFAULT ''"),
+            ("finalizado","INTEGER NOT NULL DEFAULT 0"),
+            ("data_finalizado","TEXT"),
+        ]:
             try:
                 conn.execute(f"ALTER TABLE pedidos ADD COLUMN {col} {dfn}")
             except Exception:
@@ -100,34 +117,55 @@ def criar_pedido():
     data         = request.get_json()
     remetente    = data.get("remetente","").strip()
     destinatario = data.get("destinatario","").strip()
+    turma        = data.get("turma","").strip()
+    turno        = data.get("turno","").strip()
+    turma_dest   = data.get("turma_dest","").strip()
+    turno_dest   = data.get("turno_dest","").strip()
+    dia_entrega  = data.get("dia_entrega","").strip()
     pacote_id    = data.get("pacote","")
     mensagem     = data.get("mensagem","").strip()
     anonimo      = bool(data.get("anonimo", False))
+    ad_serenata  = bool(data.get("adicional_serenata", False))
+    ad_caixa     = bool(data.get("adicional_caixa", False))
+    musica_ser   = data.get("musica_serenata","").strip()
+    musica_cai   = data.get("musica_caixa","").strip()
 
     if not destinatario or not pacote_id or not mensagem:
         return jsonify({"sucesso":False,"erro":"Preencha todos os campos obrigatórios."})
+    if not turma:
+        return jsonify({"sucesso":False,"erro":"Informe a turma."})
+    if not turno:
+        return jsonify({"sucesso":False,"erro":"Informe o turno."})
+    if not dia_entrega:
+        return jsonify({"sucesso":False,"erro":"Escolha o dia de entrega."})
     if pacote_id not in PACOTES:
         return jsonify({"sucesso":False,"erro":"Pacote inválido."})
     if len(mensagem) > 500:
         return jsonify({"sucesso":False,"erro":"Mensagem muito longa (máx. 500 caracteres)."})
 
     pacote = PACOTES[pacote_id]
+    total  = pacote["preco"] + (4.0 if ad_serenata else 0) + (3.0 if ad_caixa else 0)
     nome_exibido = "Anônimo 💝" if anonimo else (remetente or "Anônimo 💝")
     agora = datetime.now().strftime("%d/%m/%Y %H:%M")
 
     with get_db() as conn:
         cur = conn.execute(
-            "INSERT INTO pedidos (remetente,destinatario,pacote_id,pacote_nome,"
-            "emoji,preco,mensagem,anonimo,status,data_pedido) VALUES (?,?,?,?,?,?,?,?,?,?)",
-            (nome_exibido, destinatario, pacote_id, pacote["nome"],
-             pacote["emoji"], pacote["preco"], mensagem, int(anonimo),
-             "aguardando_pagamento", agora)
+            "INSERT INTO pedidos (remetente,destinatario,turma,turno,turma_dest,turno_dest,dia_entrega,"
+            "pacote_id,pacote_nome,emoji,preco,adicional_serenata,adicional_caixa,"
+            "musica_serenata,musica_caixa,total,mensagem,anonimo,status,data_pedido) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (nome_exibido, destinatario, turma, turno,
+             turma_dest, turno_dest, dia_entrega,
+             pacote_id, pacote["nome"], pacote["emoji"], pacote["preco"],
+             int(ad_serenata), int(ad_caixa),
+             musica_ser, musica_cai, total,
+             mensagem, int(anonimo), "aguardando_pagamento", agora)
         )
         conn.commit()
         pedido_id = cur.lastrowid
 
     return jsonify({"sucesso":True,"pedido_id":pedido_id,
-                    "preco":pacote["preco"],"pacote_nome":pacote["nome"],
+                    "preco":total,"pacote_nome":pacote["nome"],
                     "pix_chave":PIX_CHAVE,"pix_nome":PIX_NOME})
 
 @app.route("/confirmar-pagamento", methods=["POST"])
@@ -136,6 +174,9 @@ def confirmar_pagamento():
     comprovante = request.files.get("comprovante")
     if not pedido_id:
         return jsonify({"sucesso":False,"erro":"ID inválido."})
+
+    if not comprovante or not comprovante.filename:
+        return jsonify({"sucesso":False,"erro":"Comprovante obrigatório. Envie a foto do pagamento."})
 
     comp_b64 = None
     if comprovante and comprovante.filename:
@@ -264,14 +305,20 @@ def exportar_csv():
                    conn.execute("SELECT * FROM pedidos ORDER BY id").fetchall()]
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(["ID","Status","Finalizado","Remetente","Destinatário",
-                     "Pacote","Preço (R$)","Mensagem","Data Pedido","Data Pagamento","Data Finalizado"])
+    writer.writerow(["ID","Status","Finalizado","Remetente","Destinatário","Turma","Turno",
+                     "Dia Entrega","Pacote","Serenata","Caixa de Som","Preço Pacote (R$)",
+                     "Total (R$)","Mensagem","Data Pedido","Data Pagamento"])
     for p in pedidos:
         writer.writerow([
             p["id"], p["status"], "Sim" if p.get("finalizado") else "Não",
-            p["remetente"], p["destinatario"], p["pacote_nome"],
-            f"{p['preco']:.2f}".replace(".",","), p["mensagem"],
-            p["data_pedido"], p.get("data_pagamento",""), p.get("data_finalizado","")
+            p["remetente"], p["destinatario"],
+            p.get("turma",""), p.get("turno",""), p.get("dia_entrega",""),
+            p["pacote_nome"],
+            "Sim" if p.get("adicional_serenata") else "Não",
+            "Sim" if p.get("adicional_caixa") else "Não",
+            f"{p['preco']:.2f}".replace(".",","),
+            f"{p.get('total',p['preco']):.2f}".replace(".",","),
+            p["mensagem"], p["data_pedido"], p.get("data_pagamento","")
         ])
     output.seek(0)
     return Response("\ufeff"+output.getvalue(), mimetype="text/csv",
