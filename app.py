@@ -12,10 +12,11 @@ PIX_CHAVE  = os.environ.get("PIX_CHAVE",  "11999999999")
 PIX_NOME   = os.environ.get("PIX_NOME",   "Terceirão 2026")
 DATABASE_URL = os.environ.get("DATABASE_URL")  # PostgreSQL no Render
 DB_FILE      = os.environ.get("DB_PATH", "correio.db")  # SQLite local
-print("================================")
-print("DATABASE_URL configurada?", bool(DATABASE_URL))
-print("USANDO POSTGRES?", USE_PG)
-print("================================")
+USE_PG = bool(DATABASE_URL)
+if USE_PG:
+    app.logger.warning("CONECTANDO NO SUPABASE...")
+else:
+    app.logger.warning("USANDO SQLITE LOCAL")
 
 PACOTES = {
     "carta":             {"nome": "Carta Normal",          "preco": 2.00,  "emoji": "💌"},
