@@ -1,22 +1,21 @@
 from flask import (Flask, render_template, request, jsonify,
                    Response, redirect, url_for, session, send_from_directory)
 from datetime import datetime
-import json, os, csv, io, sqlite3, base64, secrets
+import os, csv, io, base64, secrets
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", secrets.token_hex(32))
 
-DB_FILE     = os.environ.get("DB_PATH", "correio.db")
-ADMIN_USER  = os.environ.get("ADMIN_USER",  "manoelder")
-ADMIN_PASS  = os.environ.get("ADMIN_PASS",  "reidosratos")
-app.logger.warning("================================")
-app.logger.warning(f"BANCO UTILIZADO: {DB_FILE}")
-app.logger.warning(f"DB_PATH: {os.environ.get('DB_PATH')}")
-app.logger.warning(f"EXISTE /data? {os.path.exists('/data')}")
-app.logger.warning(f"ARQUIVO EXISTE? {os.path.exists(DB_FILE)}")
-app.logger.warning("================================")
-PIX_CHAVE   = os.environ.get("PIX_CHAVE",   "11999999999")
-PIX_NOME    = os.environ.get("PIX_NOME",    "Terceirão 2026")
+ADMIN_USER = os.environ.get("ADMIN_USER", "manoelder")
+ADMIN_PASS = os.environ.get("ADMIN_PASS", "reidosratos")
+PIX_CHAVE  = os.environ.get("PIX_CHAVE",  "11999999999")
+PIX_NOME   = os.environ.get("PIX_NOME",   "Terceirão 2026")
+DATABASE_URL = os.environ.get("DATABASE_URL")  # PostgreSQL no Render
+DB_FILE      = os.environ.get("DB_PATH", "correio.db")  # SQLite local
+print("================================")
+print("DATABASE_URL configurada?", bool(DATABASE_URL))
+print("USANDO POSTGRES?", USE_PG)
+print("================================")
 
 PACOTES = {
     "carta":             {"nome": "Carta Normal",          "preco": 2.00,  "emoji": "💌"},
@@ -26,51 +25,77 @@ PACOTES = {
     "carta_bombom_flor": {"nome": "Carta + Bombom e Flor", "preco": 10.00, "emoji": "🌹🍫"},
 }
 
-# ── DB ─────────────────────────────────────────────────────────────────────────
+# ── DB (PostgreSQL ou SQLite) ───────────────────────────────────────────────
 
-def get_db():
-    conn = sqlite3.connect(DB_FILE)
-    conn.row_factory = sqlite3.Row
-    return conn
+USE_PG = bool(DATABASE_URL)
+
+if USE_PG:
+    import psycopg2
+    import psycopg2.extras
+    def get_db():
+        conn = psycopg2.connect(DATABASE_URL)
+        return conn
+    PH = "%s"   # placeholder PostgreSQL
+else:
+    import sqlite3
+    def get_db():
+        conn = sqlite3.connect(DB_FILE)
+        conn.row_factory = sqlite3.Row
+        return conn
+    PH = "?"    # placeholder SQLite
+
+CREATE_TABLE_PG = """
+    CREATE TABLE IF NOT EXISTS pedidos (
+        id                  SERIAL PRIMARY KEY,
+        remetente           TEXT NOT NULL,
+        destinatario        TEXT NOT NULL,
+        turma               TEXT NOT NULL DEFAULT '',
+        turno               TEXT NOT NULL DEFAULT '',
+        turma_dest          TEXT NOT NULL DEFAULT '',
+        turno_dest          TEXT NOT NULL DEFAULT '',
+        dia_entrega         TEXT NOT NULL DEFAULT '',
+        pacote_id           TEXT NOT NULL,
+        pacote_nome         TEXT NOT NULL,
+        emoji               TEXT NOT NULL,
+        preco               REAL NOT NULL,
+        adicional_serenata  INTEGER NOT NULL DEFAULT 0,
+        adicional_caixa     INTEGER NOT NULL DEFAULT 0,
+        musica_serenata     TEXT NOT NULL DEFAULT '',
+        musica_caixa        TEXT NOT NULL DEFAULT '',
+        total               REAL NOT NULL DEFAULT 0,
+        mensagem            TEXT NOT NULL,
+        anonimo             INTEGER NOT NULL DEFAULT 0,
+        status              TEXT NOT NULL DEFAULT 'aguardando_pagamento',
+        comprovante         TEXT,
+        data_pedido         TEXT NOT NULL,
+        data_pagamento      TEXT,
+        finalizado          INTEGER NOT NULL DEFAULT 0,
+        data_finalizado     TEXT
+    )
+"""
+
+CREATE_TABLE_SQLITE = CREATE_TABLE_PG\
+    .replace("SERIAL PRIMARY KEY", "INTEGER PRIMARY KEY AUTOINCREMENT")\
+    .replace("REAL", "REAL")
 
 def init_db():
-    with get_db() as conn:
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS pedidos (
-                id                  INTEGER PRIMARY KEY AUTOINCREMENT,
-                remetente           TEXT NOT NULL,
-                destinatario        TEXT NOT NULL,
-                turma               TEXT NOT NULL DEFAULT '',
-                turno               TEXT NOT NULL DEFAULT '',
-                dia_entrega         TEXT NOT NULL DEFAULT '',
-                pacote_id           TEXT NOT NULL,
-                pacote_nome         TEXT NOT NULL,
-                emoji               TEXT NOT NULL,
-                preco               REAL NOT NULL,
-                adicional_serenata  INTEGER NOT NULL DEFAULT 0,
-                adicional_caixa     INTEGER NOT NULL DEFAULT 0,
-                total               REAL NOT NULL DEFAULT 0,
-                mensagem            TEXT NOT NULL,
-                anonimo             INTEGER NOT NULL DEFAULT 0,
-                status              TEXT NOT NULL DEFAULT 'aguardando_pagamento',
-                comprovante         TEXT,
-                data_pedido         TEXT NOT NULL,
-                data_pagamento      TEXT,
-                finalizado          INTEGER NOT NULL DEFAULT 0,
-                data_finalizado     TEXT
-            )
-        """)
+    conn = get_db()
+    cur = conn.cursor()
+    sql = CREATE_TABLE_PG if USE_PG else CREATE_TABLE_SQLITE
+    cur.execute(sql)
+    if not USE_PG:
+        # adiciona colunas novas em bancos SQLite antigos
         for col, dfn in [
             ("turma","TEXT NOT NULL DEFAULT ''"),
             ("turno","TEXT NOT NULL DEFAULT ''"),
-            ("dia_entrega","TEXT NOT NULL DEFAULT ''"),
             ("turma_dest","TEXT NOT NULL DEFAULT ''"),
             ("turno_dest","TEXT NOT NULL DEFAULT ''"),
+            ("dia_entrega","TEXT NOT NULL DEFAULT ''"),
             ("adicional_serenata","INTEGER NOT NULL DEFAULT 0"),
             ("adicional_caixa","INTEGER NOT NULL DEFAULT 0"),
-            ("total","REAL NOT NULL DEFAULT 0"),
             ("musica_serenata","TEXT NOT NULL DEFAULT ''"),
             ("musica_caixa","TEXT NOT NULL DEFAULT ''"),
+            ("total","REAL NOT NULL DEFAULT 0"),
             ("finalizado","INTEGER NOT NULL DEFAULT 0"),
             ("data_finalizado","TEXT"),
         ]:
@@ -78,16 +103,27 @@ def init_db():
                 conn.execute(f"ALTER TABLE pedidos ADD COLUMN {col} {dfn}")
             except Exception:
                 pass
-        conn.commit()
+    conn.commit()
+    conn.close()
 
 init_db()
 
-def pedido_to_dict(row):
-    d = dict(row)
+def row_to_dict(row, cursor=None):
+    if USE_PG:
+        cols = [d[0] for d in cursor.description]
+        d = dict(zip(cols, row))
+    else:
+        d = dict(row)
     d["anonimo"]    = bool(d.get("anonimo", 0))
     d["finalizado"] = bool(d.get("finalizado", 0))
-    d.pop("comprovante", None)   # nunca expor base64 nas listagens públicas
+    d["adicional_serenata"] = bool(d.get("adicional_serenata", 0))
+    d["adicional_caixa"]    = bool(d.get("adicional_caixa", 0))
     return d
+
+def rows_to_dicts(rows, cursor):
+    return [row_to_dict(r, cursor) for r in rows]
+
+# ── AUTH ───────────────────────────────────────────────────────────────────────
 
 def is_admin():
     return session.get("admin") is True
@@ -97,7 +133,7 @@ def require_admin():
         return redirect(url_for("login"))
     return None
 
-# ── PÚBLICAS ───────────────────────────────────────────────────────────────────
+# ── ROTAS PÚBLICAS ─────────────────────────────────────────────────────────────
 
 @app.route("/")
 def index():
@@ -111,12 +147,14 @@ def static_files(filename):
 
 @app.route("/pedidos")
 def listar_pedidos():
-    with get_db() as conn:
-        rows = conn.execute(
-            "SELECT id,destinatario,pacote_nome,emoji,preco,data_pedido "
-            "FROM pedidos WHERE status='pago' AND finalizado=0 ORDER BY id DESC LIMIT 50"
-        ).fetchall()
-    return jsonify([dict(r) for r in rows])
+    conn = get_db(); cur = conn.cursor()
+    cur.execute(
+        "SELECT id,destinatario,pacote_nome,emoji,preco,data_pedido "
+        "FROM pedidos WHERE status='pago' AND finalizado=0 ORDER BY id DESC LIMIT 50"
+    )
+    rows = [dict(zip([d[0] for d in cur.description], r)) for r in cur.fetchall()]
+    conn.close()
+    return jsonify(rows)
 
 @app.route("/criar-pedido", methods=["POST"])
 def criar_pedido():
@@ -138,10 +176,10 @@ def criar_pedido():
 
     if not destinatario or not pacote_id or not mensagem:
         return jsonify({"sucesso":False,"erro":"Preencha todos os campos obrigatórios."})
-    if not turma:
-        return jsonify({"sucesso":False,"erro":"Informe a turma."})
-    if not turno:
-        return jsonify({"sucesso":False,"erro":"Informe o turno."})
+    if not turma or not turno:
+        return jsonify({"sucesso":False,"erro":"Informe sua turma e turno."})
+    if not turma_dest or not turno_dest:
+        return jsonify({"sucesso":False,"erro":"Informe a turma e turno do destinatário."})
     if not dia_entrega:
         return jsonify({"sucesso":False,"erro":"Escolha o dia de entrega."})
     if pacote_id not in PACOTES:
@@ -154,21 +192,24 @@ def criar_pedido():
     nome_exibido = "Anônimo 💝" if anonimo else (remetente or "Anônimo 💝")
     agora = datetime.now().strftime("%d/%m/%Y %H:%M")
 
-    with get_db() as conn:
-        cur = conn.execute(
-            "INSERT INTO pedidos (remetente,destinatario,turma,turno,turma_dest,turno_dest,dia_entrega,"
-            "pacote_id,pacote_nome,emoji,preco,adicional_serenata,adicional_caixa,"
-            "musica_serenata,musica_caixa,total,mensagem,anonimo,status,data_pedido) "
-            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-            (nome_exibido, destinatario, turma, turno,
-             turma_dest, turno_dest, dia_entrega,
-             pacote_id, pacote["nome"], pacote["emoji"], pacote["preco"],
-             int(ad_serenata), int(ad_caixa),
-             musica_ser, musica_cai, total,
-             mensagem, int(anonimo), "aguardando_pagamento", agora)
-        )
-        conn.commit()
+    conn = get_db(); cur = conn.cursor()
+    cur.execute(
+        f"INSERT INTO pedidos (remetente,destinatario,turma,turno,turma_dest,turno_dest,"
+        f"dia_entrega,pacote_id,pacote_nome,emoji,preco,adicional_serenata,adicional_caixa,"
+        f"musica_serenata,musica_caixa,total,mensagem,anonimo,status,data_pedido) "
+        f"VALUES ({','.join([PH]*20)})",
+        (nome_exibido, destinatario, turma, turno, turma_dest, turno_dest,
+         dia_entrega, pacote_id, pacote["nome"], pacote["emoji"], pacote["preco"],
+         int(ad_serenata), int(ad_caixa), musica_ser, musica_cai, total,
+         mensagem, int(anonimo), "aguardando_pagamento", agora)
+    )
+    conn.commit()
+    if USE_PG:
+        cur.execute("SELECT lastval()")
+        pedido_id = cur.fetchone()[0]
+    else:
         pedido_id = cur.lastrowid
+    conn.close()
 
     return jsonify({"sucesso":True,"pedido_id":pedido_id,
                     "preco":total,"pacote_nome":pacote["nome"],
@@ -178,35 +219,35 @@ def criar_pedido():
 def confirmar_pagamento():
     pedido_id   = request.form.get("pedido_id")
     comprovante = request.files.get("comprovante")
+
     if not pedido_id:
         return jsonify({"sucesso":False,"erro":"ID inválido."})
-
     if not comprovante or not comprovante.filename:
         return jsonify({"sucesso":False,"erro":"Comprovante obrigatório. Envie a foto do pagamento."})
 
-    comp_b64 = None
-    if comprovante and comprovante.filename:
-        dados = comprovante.read()
-        if len(dados) > 5*1024*1024:
-            return jsonify({"sucesso":False,"erro":"Comprovante muito grande (máx. 5MB)."})
-        mime = comprovante.content_type or "image/jpeg"
-        comp_b64 = f"data:{mime};base64," + base64.b64encode(dados).decode()
+    dados = comprovante.read()
+    if len(dados) > 5*1024*1024:
+        return jsonify({"sucesso":False,"erro":"Comprovante muito grande (máx. 5MB)."})
+    mime = comprovante.content_type or "image/jpeg"
+    comp_b64 = f"data:{mime};base64," + base64.b64encode(dados).decode()
 
     agora = datetime.now().strftime("%d/%m/%Y %H:%M")
-    with get_db() as conn:
-        conn.execute(
-            "UPDATE pedidos SET status='pago', comprovante=?, data_pagamento=? WHERE id=?",
-            (comp_b64, agora, pedido_id)
-        )
-        conn.commit()
-        row = conn.execute(
-            "SELECT id,destinatario,pacote_nome,emoji,preco,data_pedido FROM pedidos WHERE id=?",
-            (pedido_id,)
-        ).fetchone()
-
+    conn = get_db(); cur = conn.cursor()
+    cur.execute(
+        f"UPDATE pedidos SET status='pago', comprovante={PH}, data_pagamento={PH} WHERE id={PH}",
+        (comp_b64, agora, pedido_id)
+    )
+    conn.commit()
+    cur.execute(
+        f"SELECT id,destinatario,pacote_nome,emoji,preco,data_pedido FROM pedidos WHERE id={PH}",
+        (pedido_id,)
+    )
+    row = cur.fetchone()
+    conn.close()
     if not row:
         return jsonify({"sucesso":False,"erro":"Pedido não encontrado."})
-    return jsonify({"sucesso":True,"pedido":dict(row)})
+    cols = ["id","destinatario","pacote_nome","emoji","preco","data_pedido"]
+    return jsonify({"sucesso":True,"pedido":dict(zip(cols,row))})
 
 # ── LOGIN ──────────────────────────────────────────────────────────────────────
 
@@ -228,7 +269,7 @@ def logout():
     session.clear()
     return redirect(url_for("index"))
 
-# ── ADMIN (requer sessão) ──────────────────────────────────────────────────────
+# ── ADMIN ──────────────────────────────────────────────────────────────────────
 
 @app.route("/admin")
 def admin_dashboard():
@@ -240,17 +281,15 @@ def admin_dashboard():
 def admin_dados():
     if not is_admin():
         return jsonify({"erro":"Não autorizado"}), 401
-    with get_db() as conn:
-        pedidos = [dict(r) for r in
-                   conn.execute("SELECT * FROM pedidos ORDER BY id DESC").fetchall()]
+    conn = get_db(); cur = conn.cursor()
+    cur.execute("SELECT * FROM pedidos ORDER BY id DESC")
+    pedidos = rows_to_dicts(cur.fetchall(), cur)
+    conn.close()
     for p in pedidos:
-        p["anonimo"]    = bool(p.get("anonimo",0))
-        p["finalizado"] = bool(p.get("finalizado",0))
-        # não expõe o base64 completo na listagem, só indicador
         p["tem_comprovante"] = bool(p.get("comprovante"))
         p.pop("comprovante", None)
 
-    total_geral = sum(p["preco"] for p in pedidos if p["status"]=="pago")
+    total_geral = sum(p["total"] or p["preco"] for p in pedidos if p["status"]=="pago")
     aguardando  = sum(1 for p in pedidos if p["status"]=="aguardando_pagamento")
     finalizados = sum(1 for p in pedidos if p["finalizado"])
     por_pacote  = {}
@@ -267,12 +306,13 @@ def admin_dados():
 def baixar_comprovante(pid):
     if not is_admin():
         return "Não autorizado", 401
-    with get_db() as conn:
-        row = conn.execute("SELECT comprovante FROM pedidos WHERE id=?", (pid,)).fetchone()
-    if not row or not row["comprovante"]:
+    conn = get_db(); cur = conn.cursor()
+    cur.execute(f"SELECT comprovante FROM pedidos WHERE id={PH}", (pid,))
+    row = cur.fetchone()
+    conn.close()
+    if not row or not row[0]:
         return "Sem comprovante", 404
-    # comprovante é "data:image/jpeg;base64,AAA..."
-    header, b64data = row["comprovante"].split(",", 1)
+    header, b64data = row[0].split(",", 1)
     mime = header.split(":")[1].split(";")[0]
     ext  = mime.split("/")[-1].replace("jpeg","jpg")
     raw  = base64.b64decode(b64data)
@@ -280,48 +320,50 @@ def baixar_comprovante(pid):
                     headers={"Content-Disposition":
                              f"attachment; filename=comprovante_{pid}.{ext}"})
 
-@app.route("/admin/excluir/<int:pid>", methods=["POST"])
-def excluir_pedido(pid):
-    if not is_admin():
-        return jsonify({"erro":"Não autorizado"}), 401
-    with get_db() as conn:
-        conn.execute("DELETE FROM pedidos WHERE id=?", (pid,))
-        conn.commit()
-    return jsonify({"sucesso":True})
-
 @app.route("/admin/finalizar/<int:pid>", methods=["POST"])
 def finalizar_pedido(pid):
     if not is_admin():
         return jsonify({"erro":"Não autorizado"}), 401
     agora_iso = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    with get_db() as conn:
-        conn.execute(
-            "UPDATE pedidos SET finalizado=1, data_finalizado=? WHERE id=?",
-            (agora_iso, pid)
-        )
-        conn.commit()
+    conn = get_db(); cur = conn.cursor()
+    cur.execute(
+        f"UPDATE pedidos SET finalizado=1, data_finalizado={PH} WHERE id={PH}",
+        (agora_iso, pid)
+    )
+    conn.commit(); conn.close()
+    return jsonify({"sucesso":True})
+
+@app.route("/admin/excluir/<int:pid>", methods=["POST"])
+def excluir_pedido(pid):
+    if not is_admin():
+        return jsonify({"erro":"Não autorizado"}), 401
+    conn = get_db(); cur = conn.cursor()
+    cur.execute(f"DELETE FROM pedidos WHERE id={PH}", (pid,))
+    conn.commit(); conn.close()
     return jsonify({"sucesso":True})
 
 @app.route("/admin/exportar-csv")
 def exportar_csv():
     if not is_admin():
         return "Não autorizado", 401
-    with get_db() as conn:
-        pedidos = [dict(r) for r in
-                   conn.execute("SELECT * FROM pedidos ORDER BY id").fetchall()]
+    conn = get_db(); cur = conn.cursor()
+    cur.execute("SELECT * FROM pedidos ORDER BY id")
+    pedidos = rows_to_dicts(cur.fetchall(), cur)
+    conn.close()
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(["ID","Status","Finalizado","Remetente","Destinatário","Turma","Turno",
-                     "Dia Entrega","Pacote","Serenata","Caixa de Som","Preço Pacote (R$)",
-                     "Total (R$)","Mensagem","Data Pedido","Data Pagamento"])
+    writer.writerow(["ID","Status","Finalizado","Remetente","Turma","Turno",
+                     "Destinatário","Turma Dest","Turno Dest","Dia Entrega",
+                     "Pacote","Serenata","Música Serenata","Caixa de Som","Música Caixa",
+                     "Preço Pacote","Total","Mensagem","Data Pedido","Data Pagamento"])
     for p in pedidos:
         writer.writerow([
             p["id"], p["status"], "Sim" if p.get("finalizado") else "Não",
-            p["remetente"], p["destinatario"],
-            p.get("turma",""), p.get("turno",""), p.get("dia_entrega",""),
-            p["pacote_nome"],
-            "Sim" if p.get("adicional_serenata") else "Não",
-            "Sim" if p.get("adicional_caixa") else "Não",
+            p["remetente"], p.get("turma",""), p.get("turno",""),
+            p["destinatario"], p.get("turma_dest",""), p.get("turno_dest",""),
+            p.get("dia_entrega",""), p["pacote_nome"],
+            "Sim" if p.get("adicional_serenata") else "Não", p.get("musica_serenata",""),
+            "Sim" if p.get("adicional_caixa") else "Não", p.get("musica_caixa",""),
             f"{p['preco']:.2f}".replace(".",","),
             f"{p.get('total',p['preco']):.2f}".replace(".",","),
             p["mensagem"], p["data_pedido"], p.get("data_pagamento","")
